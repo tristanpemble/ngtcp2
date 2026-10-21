@@ -1,0 +1,17 @@
+.{
+    .name = .ngtcp2,
+    .version = "1.25.0",
+    .fingerprint = 0xe10a0e106a360660,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .ngtcp2 = .{
+            .url = "https://github.com/ngtcp2/ngtcp2/releases/download/v1.25.0/ngtcp2-1.25.0.tar.gz",
+            .hash = "N-V-__8AADwxaQCTJkOX_hQ27ZB-ox3TiXC3K25GoJCazPOJ",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE",
+    },
+}
