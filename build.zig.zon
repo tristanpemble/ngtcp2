@@ -8,6 +8,11 @@
             .url = "https://github.com/ngtcp2/ngtcp2/releases/download/v1.25.0/ngtcp2-1.25.0.tar.gz",
             .hash = "N-V-__8AADwxaQCTJkOX_hQ27ZB-ox3TiXC3K25GoJCazPOJ",
         },
+        .boringssl = .{
+            .url = "https://github.com/allyourcodebase/boringssl/archive/6ea0cd4b83fe6887c38b71423022b444f3ad7c4b.tar.gz",
+            .hash = "boringssl-0.20260526.0-EhtkNao-AAA7oBBvtCexTbaOpdetFt2H-giALvGGZyqk",
+            .lazy = true,
+        },
     },
     .paths = .{
         "build.zig",

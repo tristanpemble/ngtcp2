@@ -1,10 +1,11 @@
 const std = @import("std");
 const manifest = @import("build.zig.zon");
 
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const shared = b.option(bool, "shared", "Build a shared library") orelse false;
+    const boringssl = b.option(bool, "boringssl", "Build the BoringSSL crypto adapter") orelse false;
     const upstream = b.dependency("ngtcp2", .{});
     const version = std.SemanticVersion.parse(manifest.version) catch unreachable;
     const version_header = b.addConfigHeader(.{
@@ -45,6 +46,33 @@ pub fn build(b: *std.Build) void {
         .version = if (shared) .{ .major = 16, .minor = 11, .patch = 0 } else null,
         .root_module = module,
     });
+    if (boringssl) {
+        const dependency = try b.dependencyLazy("boringssl", .{
+            .target = target,
+            .optimize = optimize,
+        });
+        const ssl = dependency.artifact("ssl");
+        const crypto = dependency.artifact("crypto");
+        module.addIncludePath(upstream.path("lib"));
+        module.addIncludePath(upstream.path("crypto"));
+        module.addIncludePath(upstream.path("crypto/includes"));
+        module.addCSourceFiles(.{
+            .root = upstream.path("crypto"),
+            .files = &.{ "boringssl/boringssl.c", "shared.c" },
+            .flags = &.{ "-std=c11", "-fvisibility=hidden", "-UNDEBUG" },
+        });
+        module.linkLibrary(ssl);
+        module.linkLibrary(crypto);
+        if (target.result.os.tag == .windows) crypto.root_module.linkSystemLibrary("ws2_32", .{});
+        lib.installHeader(upstream.path("crypto/includes/ngtcp2/ngtcp2_crypto.h"), "ngtcp2/ngtcp2_crypto.h");
+        lib.installHeader(
+            upstream.path("crypto/includes/ngtcp2/ngtcp2_crypto_boringssl.h"),
+            "ngtcp2/ngtcp2_crypto_boringssl.h",
+        );
+        lib.installLibraryHeaders(ssl);
+        b.installArtifact(ssl);
+        b.installArtifact(crypto);
+    }
     lib.installHeader(upstream.path("lib/includes/ngtcp2/ngtcp2.h"), "ngtcp2/ngtcp2.h");
     lib.installConfigHeader(version_header);
     b.installArtifact(lib);
